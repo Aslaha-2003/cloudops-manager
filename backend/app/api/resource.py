@@ -72,11 +72,8 @@ def update_resource(
     return resource
 
 
-@router.delete("/{resource_id}")
-def delete_resource(
-    resource_id: int,
-    db: Session = Depends(get_db),
-):
+@router.delete("/{resource_id}", status_code=204)
+def delete_resource(resource_id: int, db: Session = Depends(get_db)):
     deleted = delete_resource_service(db, resource_id)
 
     if not deleted:
