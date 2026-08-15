@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from backend.app.models.resource import Resource
-from backend.app.schemas.resource import ResourceCreate
+from backend.app.schemas.resource import ResourceCreate, ResourceUpdate
 
 
 def create_resource(db: Session, resource: ResourceCreate) -> Resource:
@@ -23,3 +23,29 @@ def create_resource(db: Session, resource: ResourceCreate) -> Resource:
 
 def get_resources(db: Session) -> list[Resource]:
     return db.query(Resource).all()
+
+
+def get_resource(db: Session, resource_id: int) -> Resource | None:
+    return db.query(Resource).filter(Resource.id == resource_id).first()
+
+
+def update_resource(
+    db: Session,
+    resource: Resource,
+    updates: ResourceUpdate,
+) -> Resource:
+
+    update_data = updates.model_dump(exclude_unset=True)
+
+    for field, value in update_data.items():
+        setattr(resource, field, value)
+
+    db.commit()
+    db.refresh(resource)
+
+    return resource
+
+
+def delete_resource(db: Session, resource: Resource) -> None:
+    db.delete(resource)
+    db.commit()
