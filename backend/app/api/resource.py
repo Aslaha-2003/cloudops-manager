@@ -14,6 +14,16 @@ from backend.app.services.resource_service import (
     update_resource as update_resource_service,
     delete_resource as delete_resource_service,
 )
+from backend.app.schemas.resource_metric import (
+    ResourceMetricCreate,
+    ResourceMetricResponse,
+)
+
+from backend.app.services.resource_metric import (
+    create_metric as create_metric_service,
+    get_metrics as get_metrics_service,
+    get_latest_metric as get_latest_metric_service,
+)
 
 
 router = APIRouter(
@@ -92,3 +102,78 @@ def delete_resource(resource_id: int, db: Session = Depends(get_db)):
     return {
         "message": "Resource deleted successfully"
     }
+
+@router.post(
+    "/{resource_id}/metrics",
+    response_model=ResourceMetricResponse,
+)
+def create_metric(
+    resource_id: int,
+    metric: ResourceMetricCreate,
+    db: Session = Depends(get_db),
+):
+    resource = get_resource_service(db, resource_id)
+
+    if resource is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Resource not found",
+        )
+
+    return create_metric_service(
+        db,
+        resource_id,
+        metric,
+    )
+
+
+@router.get(
+    "/{resource_id}/metrics",
+    response_model=list[ResourceMetricResponse],
+)
+def get_metrics(
+    resource_id: int,
+    db: Session = Depends(get_db),
+):
+    resource = get_resource_service(db, resource_id)
+
+    if resource is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Resource not found",
+        )
+
+    return get_metrics_service(
+        db,
+        resource_id,
+    )
+
+
+@router.get(
+    "/{resource_id}/metrics/latest",
+    response_model=ResourceMetricResponse,
+)
+def get_latest_metric(
+    resource_id: int,
+    db: Session = Depends(get_db),
+):
+    resource = get_resource_service(db, resource_id)
+
+    if resource is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Resource not found",
+        )
+
+    metric = get_latest_metric_service(
+        db,
+        resource_id,
+    )
+
+    if metric is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No metrics found for this resource",
+        )
+
+    return metric
