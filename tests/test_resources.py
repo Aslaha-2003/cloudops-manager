@@ -153,3 +153,95 @@ def test_create_resource_empty_name(client):
     )
 
     assert response.status_code == 422
+
+def test_filter_resources_by_type(client):
+    client.post(
+        "/resources/",
+        json={
+            "name": "Test VM",
+            "resource_type": "vm",
+            "cpu_cores": 4,
+            "memory_gb": 8,
+            "storage_gb": 100,
+        },
+    )
+
+    client.post(
+        "/resources/",
+        json={
+            "name": "Test Server",
+            "resource_type": "server",
+            "cpu_cores": 8,
+            "memory_gb": 16,
+            "storage_gb": 200,
+        },
+    )
+
+    response = client.get("/resources/?resource_type=vm")
+
+    assert response.status_code == 200
+    resources = response.json()
+
+    assert len(resources) == 1
+    assert resources[0]["resource_type"] == "vm"
+
+
+def test_filter_resources_by_status(client):
+    create_response = client.post(
+        "/resources/",
+        json={
+            "name": "Test VM",
+            "resource_type": "vm",
+            "cpu_cores": 4,
+            "memory_gb": 8,
+            "storage_gb": 100,
+        },
+    )
+
+    resource_id = create_response.json()["id"]
+
+    client.put(
+        f"/resources/{resource_id}",
+        json={"status": "stopped"},
+    )
+
+    response = client.get("/resources/?status=stopped")
+
+    assert response.status_code == 200
+    resources = response.json()
+
+    assert len(resources) == 1
+    assert resources[0]["status"] == "stopped"
+
+
+def test_filter_resources_by_type_and_status(client):
+    client.post(
+        "/resources/",
+        json={
+            "name": "Running VM",
+            "resource_type": "vm",
+            "cpu_cores": 4,
+            "memory_gb": 8,
+            "storage_gb": 100,
+        },
+    )
+
+    response = client.get(
+        "/resources/?resource_type=vm&status=running"
+    )
+
+    assert response.status_code == 200
+    resources = response.json()
+
+    assert len(resources) == 1
+    assert resources[0]["resource_type"] == "vm"
+    assert resources[0]["status"] == "running"
+
+
+def test_filter_resources_no_match(client):
+    response = client.get(
+        "/resources/?resource_type=nonexistent"
+    )
+
+    assert response.status_code == 200
+    assert response.json() == []

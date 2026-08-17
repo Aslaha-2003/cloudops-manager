@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from backend.app.core.database import get_db
@@ -21,10 +21,17 @@ router = APIRouter(
     tags=["Resources"]
 )
 
-
 @router.get("/", response_model=list[ResourceResponse])
-def get_resources(db: Session = Depends(get_db)):
-    return get_resources_service(db)
+def get_resources(
+    resource_type: str | None = None,
+    status: str | None = None,
+    db: Session = Depends(get_db),
+):
+    return get_resources_service(
+        db,
+        resource_type=resource_type,
+        status=status,
+    )
 
 
 @router.post("/", response_model=ResourceResponse)

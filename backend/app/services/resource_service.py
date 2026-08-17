@@ -14,8 +14,16 @@ def create_resource(db: Session, resource: ResourceCreate):
     return create_resource_repository(db, resource)
 
 
-def get_resources(db: Session):
-    return get_resources_repository(db)
+def get_resources(
+    db: Session,
+    resource_type: str | None = None,
+    status: str | None = None,
+):
+    return get_resources_repository(
+        db,
+        resource_type=resource_type,
+        status=status,
+    )
 
 
 def get_resource(db: Session, resource_id: int):

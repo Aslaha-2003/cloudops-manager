@@ -21,8 +21,21 @@ def create_resource(db: Session, resource: ResourceCreate) -> Resource:
     return db_resource
 
 
-def get_resources(db: Session) -> list[Resource]:
-    return db.query(Resource).all()
+def get_resources(
+    db: Session,
+    resource_type: str | None = None,
+    status: str | None = None,
+) -> list[Resource]:
+
+    query = db.query(Resource)
+
+    if resource_type is not None:
+        query = query.filter(Resource.resource_type == resource_type)
+
+    if status is not None:
+        query = query.filter(Resource.status == status)
+
+    return query.all()
 
 
 def get_resource(db: Session, resource_id: int) -> Resource | None:
