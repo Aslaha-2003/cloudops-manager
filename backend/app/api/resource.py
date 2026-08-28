@@ -24,7 +24,10 @@ from backend.app.services.resource_metric import (
     get_metrics as get_metrics_service,
     get_latest_metric as get_latest_metric_service,
 )
-
+from backend.app.services.resource_health import (
+    get_resource_health as get_resource_health_service,
+)
+from backend.app.schemas.resource_health import ResourceHealthResponse
 
 router = APIRouter(
     prefix="/resources",
@@ -177,3 +180,24 @@ def get_latest_metric(
         )
 
     return metric
+
+@router.get(
+    "/{resource_id}/health",
+    response_model=ResourceHealthResponse,
+)
+def get_resource_health(
+    resource_id: int,
+    db: Session = Depends(get_db),
+):
+    health = get_resource_health_service(
+        db,
+        resource_id,
+    )
+
+    if health is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Resource or metrics not found",
+        )
+
+    return health
